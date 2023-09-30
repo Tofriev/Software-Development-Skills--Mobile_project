@@ -199,7 +199,7 @@ fun SoundDetection(onSoundDetected: (Boolean) -> Unit) {
                             }
                             audioRecord?.stop()
                             audioRecord?.release()
-                        }
+                        }//
                     } else {
                         // Request audio recording permission
                         requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
