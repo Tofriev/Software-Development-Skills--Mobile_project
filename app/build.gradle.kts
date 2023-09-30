@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.project"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.example.project"
@@ -66,4 +66,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("androidx.navigation:navigation-compose:2.4.0-alpha04")
+    implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
+
 }
