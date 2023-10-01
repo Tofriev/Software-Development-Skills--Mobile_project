@@ -16,7 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar() {
+fun TopBar(screenName: String) {
     Column {
         TopAppBar(
             title = {
@@ -25,7 +25,7 @@ fun TopBar() {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Overview",
+                        text = screenName,
                         color = Color.Black,
                         textAlign = TextAlign.Center,
                         fontWeight = FontWeight.Bold

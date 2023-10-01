@@ -68,5 +68,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
     implementation("androidx.navigation:navigation-compose:2.4.0-alpha04")
     implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
+    implementation ("androidx.compose.foundation:foundation:1.0.0")
+    implementation ("androidx.activity:activity-compose:1.3.1")
+
 
 }
