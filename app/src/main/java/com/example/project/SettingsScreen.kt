@@ -41,6 +41,8 @@ fun SettingsScreen(navController: NavController, context: Context) {
     var amplitudeThreshold by remember { mutableIntStateOf(AppPreferences.getAmplitudeThreshold(context)) }
     var name by remember { mutableStateOf(AppPreferences.getEnteredName(context)) }
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Scaffold(
         topBar = {
             TopBar("Settings")
@@ -75,6 +77,7 @@ fun SettingsScreen(navController: NavController, context: Context) {
                     keyboardActions = KeyboardActions(
                         onDone = {
                             AppPreferences.saveEnteredName(context, name)
+                            keyboardController?.hide()
                         }
                     )
                 )

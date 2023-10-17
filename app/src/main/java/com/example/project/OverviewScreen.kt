@@ -58,6 +58,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,7 +76,6 @@ fun OverviewScreen(navController: NavController, context: Context) {
                     .fillMaxSize()
             ) {
                 SoundDetection(
-                    context = context,
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -103,83 +103,59 @@ fun OverviewScreen(navController: NavController, context: Context) {
     )
 }
 
-
 @OptIn(ExperimentalComposeUiApi::class, ExperimentalPermissionsApi::class)
 @Composable
-fun SoundDetection(
-    context: Context) {
-    val name = AppPreferences.getEnteredName(context)
-
-    val amplitudeThreshold = AppPreferences.getAmplitudeThreshold(context)
-
+fun SoundDetection() {
     val context = LocalContext.current
-    val bufferSize = AudioRecord.getMinBufferSize(
-        44100,
-        AudioFormat.CHANNEL_IN_MONO,
-        AudioFormat.ENCODING_PCM_16BIT
-    )
-
-    val scope = rememberCoroutineScope()
+    val name = AppPreferences.getEnteredName(context)
+    val amplitudeThreshold = AppPreferences.getAmplitudeThreshold(context)
+    val bufferSize = AudioRecord.getMinBufferSize(44100, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
 
     val audioPermissionState = rememberPermissionState(permission = Manifest.permission.RECORD_AUDIO)
+    val scope = rememberCoroutineScope()
 
     var isListening by remember { mutableStateOf(false) }
-    var audioRecord: AudioRecord? by remember { mutableStateOf(null) }
     var hasSound by remember { mutableStateOf(false) }
+    var audioRecord by remember { mutableStateOf<AudioRecord?>(null) }
 
-    val requestPermissionLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-            if (isGranted) {
-                // Permission granted
-                audioRecord = AudioRecord(
-                    MediaRecorder.AudioSource.MIC,
-                    44100,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT,
-                    bufferSize
-                )
+    var lastSoundTime by remember { mutableStateOf<Long>(0) }
 
-                // Start recording
-                isListening = true
-                audioRecord?.startRecording()
+    LaunchedEffect(isListening) {
+        if (isListening && audioPermissionState.status.isGranted) {
+            audioRecord = AudioRecord(
+                MediaRecorder.AudioSource.MIC,
+                44100,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT,
+                bufferSize
+            )
 
-                scope.launch(Dispatchers.IO) {
-                    val data = ByteArray(bufferSize)
-                    while (isListening) {
-                        val bytesRead = audioRecord?.read(data, 0, bufferSize) ?: 0
-                        if (bytesRead > 0) {
-                            val maxAmplitude = calculateMaxAmplitude(data, bytesRead)
-                            hasSound = maxAmplitude > amplitudeThreshold
+            audioRecord?.startRecording()
+
+            scope.launch(Dispatchers.IO) {
+                val data = ByteArray(bufferSize)
+                while (isListening) {
+                    val bytesRead = audioRecord?.read(data, 0, bufferSize) ?: 0
+                    if (bytesRead > 0) {
+                        val maxAmplitude = calculateMaxAmplitude(data, bytesRead)
+                        if (maxAmplitude > amplitudeThreshold) {
+                            hasSound = true
+                            lastSoundTime = System.currentTimeMillis()
                         }
                     }
-                    audioRecord?.stop()
-                    audioRecord?.release()
+
+
+                    if (hasSound && System.currentTimeMillis() - lastSoundTime > 10_000) {
+                        hasSound = false
+                    }
+
+                    delay(100)
                 }
-            } else {
-                // Permission not granted
+                audioRecord?.stop()
                 audioRecord?.release()
-                audioRecord = null
             }
         }
-
-    if (ActivityCompat.checkSelfPermission(
-            context,
-            Manifest.permission.RECORD_AUDIO
-        ) != PackageManager.PERMISSION_GRANTED
-    ) {
-        // Request the missing permissions
-        requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-    } else {
-
-        audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.MIC,
-            44100,
-            AudioFormat.CHANNEL_IN_MONO,
-            AudioFormat.ENCODING_PCM_16BIT,
-            bufferSize
-        )
     }
-
 
     Column(
         modifier = Modifier.fillMaxSize()
@@ -204,7 +180,6 @@ fun SoundDetection(
             )
         }
 
-
         BasicTextField(
             value = TextFieldValue(text = if (isListening) "Listening..." else "Not Listening"),
             onValueChange = {},
@@ -226,16 +201,23 @@ fun SoundDetection(
                     onClick = {
                         if (!isListening) {
                             if (audioPermissionState.status.isGranted) {
-                                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                            } else {
-
+                                isListening = true
+                            } else if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                                 audioPermissionState.launchPermissionRequest()
                             }
                         } else {
                             isListening = false
-                            audioRecord?.stop()
-                            audioRecord?.release()
-                            audioRecord = null
+                            hasSound = false
+                            scope.launch {
+                                delay(500)
+                                if (audioRecord?.recordingState == AudioRecord.RECORDSTATE_RECORDING) {
+                                    audioRecord?.stop()
+                                }
+                                if (audioRecord?.state == AudioRecord.STATE_INITIALIZED) {
+                                    audioRecord?.release()
+                                }
+                                audioRecord = null
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxSize()
@@ -245,10 +227,13 @@ fun SoundDetection(
                         color = Color.White
                     )
                 }
+
+            }
             }
         }
     }
-}
+
+
 
 
 fun calculateMaxAmplitude(data: ByteArray, bytesRead: Int): Int {
