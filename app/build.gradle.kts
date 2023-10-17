@@ -71,5 +71,4 @@ dependencies {
     implementation ("androidx.compose.foundation:foundation:1.0.0")
     implementation ("androidx.activity:activity-compose:1.3.1")
 
-
 }

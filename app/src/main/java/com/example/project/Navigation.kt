@@ -67,7 +67,7 @@ fun Navigation() {
             OverviewScreen(navController = navController, context = LocalContext.current)
         }
         composable(route = Screen.RecentScreen.route){
-            RecentScreen(navController = navController)
+            InfoScreen(navController = navController)
         }
         composable(route = Screen.SettingScreen.route){
             SettingsScreen(navController = navController, context = LocalContext.current)

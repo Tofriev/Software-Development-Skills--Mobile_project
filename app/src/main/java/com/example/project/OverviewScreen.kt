@@ -63,7 +63,7 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OverviewScreen(navController: NavController, context: Context) {
-    val ctx = LocalContext.current
+
 
     Scaffold(
         topBar = {
@@ -80,20 +80,7 @@ fun OverviewScreen(navController: NavController, context: Context) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Button(
-                    onClick = {
-                        val urlIntent = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse("https://www.dogstrust.org.uk/dog-advice/training/home/help-your-dog-spend-time-alone")
-                        )
-                        ctx.startActivity(urlIntent)
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 50.dp)
-                ) {
-                    Text(text = "Need some advice on how to leave your dog alone?")
-                }
+
 
             }
         },
@@ -180,11 +167,6 @@ fun SoundDetection() {
             )
         }
 
-        BasicTextField(
-            value = TextFieldValue(text = if (isListening) "Listening..." else "Not Listening"),
-            onValueChange = {},
-            readOnly = true,
-        )
 
         Box(
             contentAlignment = Alignment.Center,

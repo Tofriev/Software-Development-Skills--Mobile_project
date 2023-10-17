@@ -36,8 +36,8 @@ fun BottomBar(navController: NavController, showBackground: String) {
             modifier = Modifier.weight(1f)
         ) {
             IconWithBackground(
-                resourceId = R.drawable.recent,
-                showBackground = showBackground == "recent",
+                resourceId = R.drawable.information,
+                showBackground = showBackground == "information",
                 size = 30.dp
             )
         }
